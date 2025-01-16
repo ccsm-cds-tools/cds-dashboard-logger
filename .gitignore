@@ -1,0 +1,5 @@
+node_modules
+logfiles
+*.log
+.env
+*.DS*
