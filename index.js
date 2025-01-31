@@ -10,6 +10,7 @@ const cors = require("cors");
 const process = require("node:process");
 const fs = require("fs");
 const https = require('https');
+const http = require('http');
 
 const winston = require("winston");
 require('winston-daily-rotate-file');
@@ -55,10 +56,8 @@ if (process.env.NODE_ENV !== 'production') {
     format: winston.format.simple(),
   }));
 }
-const sslOptions = {
-  key: fs.readFileSync('server.key'),
-  cert: fs.readFileSync('server.cert'),
-};
+
+
 
 app.get('/404', (req, res) => {
     res.sendStatus(404);
@@ -72,7 +71,20 @@ app.post("/log", (req, res) => {
   });
   res.json({success:true});
 });
-const httpsServer = https.createServer(sslOptions, app);
-httpsServer.listen(parseInt(PORT, 10), () => {
-  console.log(`CDS Dashboard Logger is running at http://localhost:${PORT}`);
-});
+const certPath = 'server.cert'; // todo grab from env maybe
+const keyPath = 'server.key';
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  const sslOptions = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+  };
+  const httpsServer = https.createServer(sslOptions, app);
+  httpsServer.listen(parseInt(PORT, 10), () => {
+    console.log(`CDS Dashboard Logger is running at https://localhost:${PORT}`);
+  });
+} else {
+  http.createServer(app).listen(parseInt(PORT, 10), () => {
+    console.log('Cert not found, using http instead of https');
+    console.log(`CDS Dashboard Logger is running at http://localhost:${PORT}`);
+  });
+}
