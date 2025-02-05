@@ -1,8 +1,10 @@
 /* Define simple logging service for recording metrics from CDS Dashboard
  * Listen for POST requests at :PORT/log and write to daily rotated logfiles
  *
- * TODO: Convert to HTTPS, reject HTTP POST requests
- *       Add default / GET
+ * Supports https POST requests if server.key and server.cert files are
+ * present in the directory with this file.
+ * PORT may be set using node environment variable.
+ * 
  */
 
 const express = require("express");
