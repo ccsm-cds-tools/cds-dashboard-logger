@@ -1,13 +1,18 @@
 /* Define simple logging service for recording metrics from CDS Dashboard
  * Listen for POST requests at :PORT/log and write to daily rotated logfiles
  *
- * TODO: Convert to HTTPS, reject HTTP POST requests
- *       Add default / GET
+ * Supports https POST requests if server.key and server.cert files are
+ * present in the directory with this file.
+ * PORT may be set using node environment variable.
+ * 
  */
 
 const express = require("express");
 const cors = require("cors");
-const process = require("node:process")
+const process = require("node:process");
+const fs = require("fs");
+const https = require('https');
+const http = require('http');
 
 const winston = require("winston");
 require('winston-daily-rotate-file');
@@ -18,7 +23,7 @@ const bodyParser = require("body-parser");
 const app = express();
 app.use(cors());
 app.use(bodyParser.json())
-
+app.use(express.text());
 const PORT = process.env.PORT || 4040;
 const { combine, timestamp, json } = winston.format;
 
@@ -54,18 +59,34 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
+
+
 app.get('/404', (req, res) => {
     res.sendStatus(404);
 })
 
 app.post("/log", (req, res) => {
+  console.log(req.body);
   logger.info({
     id: nanoid(),
     message: req.body
   });
   res.json({success:true});
 });
-
-app.listen(parseInt(PORT, 10), () => {
-  console.log(`CDS Dashboard Logger is running at http://localhost:${PORT}`);
-});
+const certPath = 'server.cert'; // todo grab from env maybe
+const keyPath = 'server.key';
+if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+  const sslOptions = {
+    key: fs.readFileSync(keyPath),
+    cert: fs.readFileSync(certPath),
+  };
+  const httpsServer = https.createServer(sslOptions, app);
+  httpsServer.listen(parseInt(PORT, 10), () => {
+    console.log(`CDS Dashboard Logger is running at https://localhost:${PORT}`);
+  });
+} else {
+  http.createServer(app).listen(parseInt(PORT, 10), () => {
+    console.log('Cert not found, using http instead of https');
+    console.log(`CDS Dashboard Logger is running at http://localhost:${PORT}`);
+  });
+}

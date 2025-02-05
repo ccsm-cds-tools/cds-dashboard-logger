@@ -7,7 +7,9 @@ It uses [Express](https://expressjs.com) and [Winston](https://github.com/winsto
 Install dependencies: `npm install` and then start the logger `npm run start`. You can pass an env variable to set the port the logger will listen on: `PORT=5000 node index.js`
 When run in development mode, it will write a log message to the console. In production mode (`NODE_ENV=production node index.js`) it will not output to the console.
 
-The logger will listen for HTTP POST requests with a JSON body. These will be written to .log files in the `logfiles` directory. By default, log files will be rotated daily, and previous log files are gzipped. 
+By default, the logger will listen for HTTP POST requests with a JSON body. These will be written to .log files in the `logfiles` directory. By default, log files will be rotated daily, and previous log files are gzipped. 
+
+If you want to run the logger in https mode, place `server.key` and `server.cert` files in the directory with index.js and start. The logger will then listen for HTTPS POST requests.
 
 ## License
 

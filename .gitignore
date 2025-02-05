@@ -3,3 +3,6 @@ logfiles
 *.log
 .env
 *.DS*
+*.cert
+*.key
+*.crt
